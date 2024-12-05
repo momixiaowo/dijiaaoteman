@@ -63,22 +63,24 @@ system_update_and_packages() {
     log_action "系统更新和必要软件包安装完成"
 }
 
-# SSH安全配置
-configure_ssh() {
-    local new_port=${1:-22}
+# SSH端口修改
+modify_ssh_port() {
+    read -p "请输入新的SSH端口号(默认22): " NEW_SSH_PORT
+    NEW_SSH_PORT=${NEW_SSH_PORT:-22}
     
     # 备份原配置
-    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
+    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
     
     # 修改SSH配置
-    sed -i "s/^#*Port [0-9]*/Port $new_port/" /etc/ssh/sshd_config
-    sed -i 's/^#*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
-    sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+    sed -i "s/^#Port 22/Port $NEW_SSH_PORT/" /etc/ssh/sshd_config
+    sed -i "s/^Port 22/Port $NEW_SSH_PORT/" /etc/ssh/sshd_config
     
     # 重启SSH服务
-    systemctl restart sshd
-    log_action "SSH配置已更新，端口修改为 $new_port"
+    systemctl restart ssh || systemctl restart sshd
+    
+    echo -e "${GREEN}SSH端口已修改为 $NEW_SSH_PORT${NC}"
 }
+
 
 # UFW防火墙配置
 configure_ufw() {
