@@ -63,38 +63,24 @@ system_update_and_packages() {
     log_action "系统更新和必要软件包安装完成"
 }
 
-# SSH端口修改
-modify_ssh_port() {
-    read -p "请输入新的SSH端口号(默认22): " NEW_SSH_PORT
-    NEW_SSH_PORT=${NEW_SSH_PORT:-22}
-    
-    # 检查输入是否为有效端口号（1-65535之间的数字）
-    if ! [[ $NEW_SSH_PORT =~ ^[0-9]+$ ]] || [ "$NEW_SSH_PORT" -lt 1 ] || [ "$NEW_SSH_PORT" -gt 65535 ]; then
-        echo -e "${RED}错误: 请输入有效的端口号 (1-65535)!${NC}"
-        return 1
-    fi
-    
-    # 备份原配置
-    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
-    
-    # 修改SSH配置
-    if grep -q "^#*Port " /etc/ssh/sshd_config; then
-        # 如果找到 Port 配置行，替换它
-        sed -i "s/^#*Port .*/Port $NEW_SSH_PORT/" /etc/ssh/sshd_config
-    else
-        # 如果没有 Port 配置行，追加到文件末尾
-        echo "Port $NEW_SSH_PORT" >> /etc/ssh/sshd_config
-    fi
-    
-    # 重启SSH服务
-    if systemctl restart ssh 2>/dev/null || systemctl restart sshd 2>/dev/null; then
-        echo -e "${GREEN}SSH端口已修改为 $NEW_SSH_PORT${NC}"
-    else
-        echo -e "${RED}错误: SSH服务重启失败，请检查配置文件!${NC}"
-        return 1
-    fi
-}
+# 修改SSH端口
+change_ssh_port() {
+    echo -e "${YELLOW}开始修改SSH端口...${NC}"
+    read -p "请输入新的SSH端口号 (1024-65535之间): " NEW_PORT
 
+    if [[ ! $NEW_PORT =~ ^[0-9]+$ ]] || [[ $NEW_PORT -lt 1024 ]] || [[ $NEW_PORT -gt 65535 ]]; then
+        echo -e "${RED}错误：请输入1024-65535之间的有效端口号${NC}"
+        return 1
+    fi
+
+    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
+    sed -i "s/^#Port 22/Port ${NEW_PORT}/" /etc/ssh/sshd_config
+    sed -i "s/^Port 22/Port ${NEW_PORT}/" /etc/ssh/sshd_config
+    systemctl restart sshd
+    systemctl enable sshd
+
+    echo -e "${GREEN}SSH端口已修改为 ${NEW_PORT}${NC}"
+}
 
 # UFW防火墙配置
 configure_ufw() {
