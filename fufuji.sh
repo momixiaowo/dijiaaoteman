@@ -107,20 +107,65 @@ set_timezone() {
     log_action "系统时区已设置为中国时区"
 }
 
-# 配置SWAP
+# 配置和管理SWAP
 configure_swap() {
-    read -p "$(echo -e "${YELLOW}请输入SWAP大小(MB)：${NC}")" swap_size
-    
-    # 创建SWAP文件
-    fallocate -l ${swap_size}M /swapfile
-    chmod 600 /swapfile
-    mkswap /swapfile
-    swapon /swapfile
-    
-    # 永久生效
-    echo "/swapfile none swap sw 0 0" >> /etc/fstab
-    
-    log_action "SWAP空间已配置 ${swap_size}MB"
+    echo -e "${GREEN}SWAP空间管理${NC}"
+    echo "1. 创建SWAP"
+    echo "2. 删除SWAP"
+    read -p "$(echo -e "${YELLOW}请选择操作：${NC}")" swap_choice
+
+    case $swap_choice in
+        1)
+            # 创建SWAP
+            read -p "$(echo -e "${YELLOW}请输入SWAP大小(MB)：${NC}")" swap_size
+            
+            # 检查是否已存在swapfile
+            if [ -f /swapfile ]; then
+                echo -e "${RED}警告：已存在swapfile，请先删除现有SWAP${NC}"
+                return
+            fi
+            
+            # 创建SWAP文件
+            fallocate -l ${swap_size}M /swapfile
+            chmod 600 /swapfile
+            mkswap /swapfile
+            swapon /swapfile
+            
+            # 永久生效
+            if ! grep -q "/swapfile" /etc/fstab; then
+                echo "/swapfile none swap sw 0 0" >> /etc/fstab
+            fi
+            
+            log_action "SWAP空间已配置 ${swap_size}MB"
+            ;;
+        
+        2)
+            # 删除SWAP
+            if [ ! -f /swapfile ]; then
+                echo -e "${RED}未找到SWAP文件${NC}"
+                return
+            fi
+
+            # 关闭SWAP
+            swapoff /swapfile
+
+            # 删除SWAP文件
+            rm /swapfile
+
+            # 从fstab中移除挂载记录
+            sed -i '\|/swapfile|d' /etc/fstab
+
+            log_action "SWAP空间已删除"
+            ;;
+        
+        *)
+            echo -e "${RED}无效的选择${NC}"
+            ;;
+    esac
+
+    # 显示SWAP状态
+    echo -e "${CYAN}当前SWAP状态:${NC}"
+    free -h | grep Swap
 }
 
 # 宝塔面板安装
