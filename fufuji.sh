@@ -167,7 +167,6 @@ configure_swap() {
     echo -e "${CYAN}当前SWAP状态:${NC}"
     free -h | grep Swap
 }
-
 # 宝塔面板安装
 install_bt_panel() {
     echo -e "${GREEN}选择宝塔面板版本${NC}"
