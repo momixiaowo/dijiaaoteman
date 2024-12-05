@@ -213,7 +213,7 @@ main_menu() {
 
     while true; do
         clear
-        echo -e "${GREEN}========== 服务器综合管理脚本 ==========${NC}"
+        echo -e "${GREEN}========== FUFU的小鸡综合管理脚本 ==========${NC}"
         echo -e "${RED}1. 系统更新与软件包安装${NC}"
         echo -e "${BLUE}2. SSH安全配置${NC}"
         echo -e "${YELLOW}3. UFW防火墙配置${NC}"
